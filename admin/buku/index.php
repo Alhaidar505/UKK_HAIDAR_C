@@ -15,6 +15,7 @@ ORDER BY kategori.nama_kategori ASC, buku.id DESC
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Data Buku</title>
 
 <style>
@@ -30,8 +31,9 @@ body{
     color:white;
 }
 
+/* CONTAINER */
 .container{
-    padding:40px;
+    padding:30px;
     max-width:1200px;
     margin:auto;
 }
@@ -41,6 +43,8 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:center;
+    flex-wrap:wrap;
+    gap:15px;
     margin-bottom:25px;
 }
 
@@ -75,27 +79,35 @@ h2{
     font-weight:600;
 }
 
+/* TABLE WRAPPER */
+.table-wrapper{
+    width:100%;
+    overflow-x:auto;
+    border-radius:16px;
+}
+
 /* TABLE */
 table{
     width:100%;
     border-collapse:collapse;
     background: rgba(255,255,255,0.05);
-    border-radius:16px;
-    overflow:hidden;
+    min-width:900px;
 }
 
 th{
     background: rgba(255,255,255,0.08);
-    padding:16px;
+    padding:14px;
     text-align:left;
+    font-size:13px;
 }
 
 td{
-    padding:16px;
+    padding:14px;
     border-bottom:1px solid rgba(255,255,255,0.05);
+    font-size:13px;
 }
 
-/* KATEGORI HEADER */
+/* KATEGORI */
 .kategori-row td{
     background:#1e293b;
     color:#38bdf8;
@@ -103,25 +115,48 @@ td{
     text-transform:uppercase;
 }
 
-/* barcode */
-.barcode-img{
-    background:white;
-    padding:6px;
+/* =========================
+   COVER IMAGE
+========================= */
+.cover-img{
+    width:55px;
+    height:75px;
+    object-fit:cover;
     border-radius:8px;
+    box-shadow:0 5px 12px rgba(0,0,0,0.3);
+    transition:0.3s;
 }
 
+.cover-img:hover{
+    transform:scale(1.08);
+}
+
+/* BARCODE */
+.barcode-img{
+    background:white;
+    padding:4px;
+    border-radius:6px;
+    width:120px;
+}
+
+/* SMALL TEXT */
 small{
     display:block;
-    margin-top:5px;
+    margin-top:4px;
     color:#94a3b8;
     font-size:11px;
 }
 
-/* aksi */
-a.action{
+/* ACTION */
+.action{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+}
+
+a.action-btn{
     text-decoration:none;
-    margin-right:6px;
-    padding:6px 12px;
+    padding:6px 10px;
     border-radius:8px;
     font-size:12px;
 }
@@ -136,8 +171,85 @@ a.action{
     color:white;
 }
 
-a.action:hover{
-    opacity:0.8;
+/* =========================
+   TABLET
+========================= */
+@media (max-width:768px){
+    .container{
+        padding:18px;
+    }
+
+    h2{
+        font-size:20px;
+    }
+
+    table{
+        min-width:700px;
+    }
+}
+
+/* =========================
+   HP / SURFACE / MOBILE
+========================= */
+@media (max-width:600px){
+
+    table{
+        min-width:100%;
+    }
+
+    thead{
+        display:none;
+    }
+
+    table, tbody, tr, td{
+        display:block;
+        width:100%;
+    }
+
+    tr{
+        margin-bottom:15px;
+        background:rgba(255,255,255,0.05);
+        border-radius:12px;
+        padding:10px;
+    }
+
+    td{
+        display:flex;
+        justify-content:space-between;
+        padding:8px 0;
+        border:none;
+        border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    td:last-child{
+        border-bottom:none;
+    }
+
+    .kategori-row td{
+        display:block;
+        text-align:center;
+    }
+
+    .cover-img{
+        width:50px;
+        height:70px;
+    }
+
+    .action{
+        justify-content:flex-end;
+        width:100%;
+    }
+}
+
+/* HP kecil */
+@media (max-width:360px){
+    h2{
+        font-size:18px;
+    }
+
+    td{
+        font-size:12px;
+    }
 }
 </style>
 
@@ -157,10 +269,13 @@ a.action:hover{
 
 </div>
 
+<div class="table-wrapper">
+
 <table>
 
 <tr>
     <th>Barcode</th>
+    <th>Cover</th>
     <th>Judul</th>
     <th>Penulis</th>
     <th>Stok</th>
@@ -175,7 +290,7 @@ while($b = mysqli_fetch_assoc($data)) {
 
 <?php if($lastKategori != $b['nama_kategori']) { ?>
 <tr class="kategori-row">
-    <td colspan="5">
+    <td colspan="6">
         📚 Kategori: <?= $b['nama_kategori'] ?? 'Tanpa Kategori' ?>
     </td>
 </tr>
@@ -195,13 +310,26 @@ $lastKategori = $b['nama_kategori'];
         <?php } ?>
     </td>
 
+    <!-- COVER -->
+    <td>
+        <?php if(!empty($b['cover'])){ ?>
+            <img src="../../uploads/<?= $b['cover'] ?>" class="cover-img">
+        <?php } else { ?>
+            <span style="color:#94a3b8">No Image</span>
+        <?php } ?>
+    </td>
+
     <td><?= $b['judul'] ?></td>
     <td><?= $b['penulis'] ?></td>
     <td><?= $b['stok'] ?></td>
 
     <td>
-        <a href="edit_buku.php?id=<?= $b['id'] ?>" class="action edit">Edit</a>
-        <a href="hapus_buku.php?id=<?= $b['id'] ?>" class="action delete" onclick="return confirm('Yakin hapus buku ini?')">Hapus</a>
+        <div class="action">
+            <a href="edit_buku.php?id=<?= $b['id'] ?>" class="action-btn edit">Edit</a>
+            <a href="hapus_buku.php?id=<?= $b['id'] ?>" class="action-btn delete" onclick="return confirm('Yakin hapus buku ini?')">Hapus</a>
+            <a href="show_buku.php?id=<?= $b['id'] ?>" class="action-btn edit">Show</a>
+
+        </div>
     </td>
 
 </tr>
@@ -209,6 +337,8 @@ $lastKategori = $b['nama_kategori'];
 <?php } ?>
 
 </table>
+
+</div>
 
 </div>
 

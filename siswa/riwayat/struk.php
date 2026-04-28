@@ -1,112 +1,218 @@
 <?php
-include '../../config/koneksi.php';
 
-$id = $_GET['id'];
+session_start();
+require_once '../../config/koneksi.php';
 
-$data = mysqli_fetch_assoc(mysqli_query($conn,"
-SELECT peminjaman.*, users.username, users.nis, users.rayon, users.alamat, buku.judul
-FROM peminjaman
-JOIN users ON peminjaman.user_id = users.id
-JOIN buku ON peminjaman.buku_id = buku.id
-WHERE peminjaman.id='$id'
-"));
+/* =========================
+   AUTH CHECK
+========================= */
+if (!isset($_SESSION['user'])) {
+    header("Location: ../../login.php");
+    exit;
+}
+
+/* =========================
+   GET ID
+========================= */
+$id = $_GET['id'] ?? 0;
+
+/* =========================
+   QUERY DATA
+========================= */
+$query = mysqli_query($conn, "
+    SELECT peminjaman.*, users.nama, users.username,
+           buku.judul, buku.penulis, buku.penerbit, buku.barcode, buku.cover
+    FROM peminjaman
+    JOIN users ON peminjaman.user_id = users.id
+    JOIN buku ON peminjaman.buku_id = buku.id
+    WHERE peminjaman.id='$id'
+    LIMIT 1
+");
+
+$trx = mysqli_fetch_assoc($query);
+
+/* =========================
+   VALIDASI DATA
+========================= */
+if (!$trx) {
+    die("Data tidak ditemukan");
+}
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Struk Peminjaman</title>
 
 <style>
-body{
-    font-family:Arial;
-    background:#0f172a;
-    color:white;
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
 }
 
-/* WRAPPER */
-.wrapper{
+body{
+    background:#0f172a;
+    color:#fff;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+.container{
     min-height:100vh;
     display:flex;
-    align-items:center;
     justify-content:center;
-    flex-direction:column;
+    align-items:center;
+    padding:20px;
 }
 
-/* CARD */
+/* =========================
+   CARD
+========================= */
 .card{
-    width:380px;
+    width:100%;
+    max-width:450px;
     background:#1e293b;
-    padding:25px;
-    border-radius:14px;
+    border-radius:16px;
+    padding:20px;
     text-align:center;
-    box-shadow:0 10px 25px rgba(0,0,0,0.4);
-    border:1px solid #334155;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
 }
 
-/* TITLE */
-h2{
-    margin-top:0;
-    margin-bottom:15px;
-    letter-spacing:1px;
-}
-
-/* INFO */
-.info{
-    text-align:left;
-    font-size:13px;
-    margin:6px 0;
-    color:#cbd5e1;
-}
-
-.info b{
-    color:white;
-}
-
-/* STATUS */
-.status{
-    margin-top:12px;
-    display:inline-block;
-    padding:6px 12px;
-    border-radius:8px;
-    font-size:12px;
-    text-transform:capitalize;
-}
-
-.menunggu{background:#facc15;color:black}
-.disetujui{background:#22c55e;color:white}
-.ditolak{background:#ef4444;color:white}
-.dipinjam{background:#38bdf8;color:white}
-
-/* QR */
-.qr{
-    margin-top:15px;
-}
-
-.qr img{
-    width:130px;
-    background:white;
-    padding:6px;
+/* =========================
+   COVER
+========================= */
+.cover{
+    width:120px;
+    height:160px;
+    object-fit:cover;
     border-radius:10px;
+    border:2px solid #334155;
+    margin:10px auto;
 }
 
-/* BACK BUTTON */
-.back{
-    margin-top:20px;
-    display:inline-block;
-    padding:8px 14px;
-    background:#334155;
-    color:white;
-    text-decoration:none;
+/* =========================
+   BARCODE
+========================= */
+.barcode{
+    width:160px;
+    background:#fff;
+    padding:5px;
     border-radius:8px;
+    margin:10px auto;
+}
+
+/* =========================
+   TEXT
+========================= */
+h2{
+    font-size:18px;
+    margin-bottom:10px;
+}
+
+p{
     font-size:13px;
+    color:#cbd5e1;
+    margin:4px 0;
+}
+
+hr{
+    border:1px solid #334155;
+    margin:10px 0;
+}
+
+/* =========================
+   BUTTON
+========================= */
+.action{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:15px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    padding:10px 14px;
+    border-radius:10px;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:600;
     transition:0.2s;
 }
 
-.back:hover{
-    background:#475569;
-    transform:translateY(-2px);
+.back{
+    background:#38bdf8;
+    color:#000;
+}
+
+.print{
+    background:#22c55e;
+    color:#fff;
+}
+
+.btn:hover{
+    transform:scale(1.05);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width:768px){
+    .card{
+        max-width:95%;
+    }
+
+    .cover{
+        width:110px;
+        height:150px;
+    }
+
+    .barcode{
+        width:150px;
+    }
+}
+
+@media(max-width:480px){
+    h2{font-size:16px}
+
+    .cover{
+        width:100px;
+        height:140px;
+    }
+
+    .barcode{
+        width:140px;
+    }
+
+    p{font-size:12px}
+}
+
+/* =========================
+   PRINT MODE
+========================= */
+@media print{
+    body{
+        background:#fff;
+        color:#000;
+    }
+
+    .card{
+        background:#fff;
+        color:#000;
+        box-shadow:none;
+    }
+
+    .action{
+        display:none;
+    }
+
+    p{
+        color:#000;
+    }
 }
 </style>
 
@@ -114,31 +220,53 @@ h2{
 
 <body>
 
-<div class="wrapper">
+<div class="container">
 
-<div class="card">
+    <div class="card">
 
-<h2>STRUK PENGAJUAN</h2>
+        <h2>📄 STRUK PEMINJAMAN</h2>
+        <hr>
 
-<p class="info"><b>Nama:</b> <?= $data['username']; ?></p>
-<p class="info"><b>NIS:</b> <?= $data['nis']; ?></p>
-<p class="info"><b>Rayon:</b> <?= $data['rayon']; ?></p>
-<p class="info"><b>Alamat:</b> <?= $data['alamat']; ?></p>
-<p class="info"><b>Buku:</b> <?= $data['judul']; ?></p>
-<p class="info"><b>Tanggal Pinjam:</b> <?= $data['tanggal_pinjam']; ?></p>
+        <!-- COVER -->
+        <?php if (!empty($trx['cover'])) { ?>
+            <img class="cover" src="../../uploads/<?= $trx['cover']; ?>" alt="cover">
+        <?php } else { ?>
+            <div class="cover" style="display:flex;align-items:center;justify-content:center;background:#0f172a;">
+                No Cover
+            </div>
+        <?php } ?>
 
-<span class="status <?= $data['status']; ?>">
-    <?= $data['status']; ?>
-</span>
+        <hr>
 
-<div class="qr">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=<?= $data['id']; ?>">
-</div>
+        <!-- USER -->
+        <p><b>Nama:</b> <?= $trx['nama']; ?></p>
+        <p><b>Username:</b> <?= $trx['username']; ?></p>
 
-</div>
+        <hr>
 
-<!-- BACK BUTTON -->
-<a href="../dashboard.php" class="back">← Kembali ke Dashboard</a>
+        <!-- BUKU -->
+        <p><b>Buku:</b> <?= $trx['judul']; ?></p>
+        <p>Penulis: <?= $trx['penulis']; ?></p>
+        <p>Penerbit: <?= $trx['penerbit']; ?></p>
+
+        <!-- BARCODE -->
+        <img class="barcode"
+             src="https://barcode.tec-it.com/barcode.ashx?data=<?= $trx['barcode']; ?>&code=Code128"
+             alt="barcode">
+
+        <hr>
+
+        <!-- STATUS -->
+        <p>Status: <b><?= strtoupper($trx['status']); ?></b></p>
+        <p>Tanggal: <?= $trx['tanggal_pinjam']; ?></p>
+
+        <!-- ACTION -->
+        <div class="action">
+            <a href="../dashboard.php" class="btn back">← Kembali</a>
+            <a href="#" onclick="window.print()" class="btn print">⬇ Download Struk</a>
+        </div>
+
+    </div>
 
 </div>
 

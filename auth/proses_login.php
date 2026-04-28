@@ -1,89 +1,118 @@
 <?php
-session_start();
-include '../config/koneksi.php';
 
-$username = $_POST['username'] ?? '';
+session_start();
+require_once '../config/koneksi.php';
+require_once '../config/logs.php';
+
+/* =========================
+   AMBIL INPUT
+========================= */
+$username = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
 
-// validasi kosong
-if(empty($username) || empty($password)){
-    echo "<script>
-        alert('Username dan password wajib diisi!');
-        window.location='../login.php';
-    </script>";
+/* =========================
+   VALIDASI INPUT
+========================= */
+if ($username === '' || $password === '') {
+    header("Location: ../auth/login.php?error=empty");
     exit;
 }
 
-// ambil user
-$query = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
+/* =========================
+   AMBIL USER
+========================= */
+$username = mysqli_real_escape_string($conn, $username);
+
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM users WHERE username='$username' LIMIT 1"
+);
+
 $user = mysqli_fetch_assoc($query);
 
-// user tidak ditemukan
-if(!$user){
-    echo "<script>
-        alert('Username tidak ditemukan!');
-        window.location='../login.php';
-    </script>";
+/* =========================
+   CEK USER
+========================= */
+if (!$user) {
+    header("Location: ../auth/login.php?error=not_found");
     exit;
 }
 
-// ===============================
-// CEK PASSWORD (AMAN + FALLBACK MD5)
-// ===============================
+/* =========================
+   VALIDASI PASSWORD
+========================= */
 $passValid = false;
 
-// jika pakai password_hash (baru)
-if(password_verify($password, $user['password'])){
+if (password_verify($password, $user['password'])) {
     $passValid = true;
-}
-// fallback jika masih MD5 (lama)
-elseif(md5($password) == $user['password']){
-    $passValid = true;
+} elseif (md5($password) === $user['password']) {
 
-    // upgrade otomatis ke hash baru
+    // upgrade ke bcrypt
     $newHash = password_hash($password, PASSWORD_DEFAULT);
-    mysqli_query($conn, "UPDATE users SET password='$newHash' WHERE id='".$user['id']."'");
+
+    mysqli_query(
+        $conn,
+        "UPDATE users SET password='$newHash' WHERE id='{$user['id']}'"
+    );
+
+    $passValid = true;
 }
 
-if(!$passValid){
-    echo "<script>
-        alert('Password salah!');
-        window.location='../auth/login.php';
-    </script>";
+/* =========================
+   PASSWORD SALAH
+========================= */
+if (!$passValid) {
+    header("Location: ../auth/login.php?error=wrong_password");
     exit;
 }
 
-// SESSION
+/* =========================
+   SET SESSION
+========================= */
 $_SESSION['user'] = [
     'id'       => $user['id'],
     'nama'     => $user['nama'],
     'username' => $user['username'],
     'role'     => $user['role'],
-    'nis'      => $user['nis'] ?? '',
-    'rayon'    => $user['rayon'] ?? '',
-    'alamat'   => $user['alamat'] ?? ''
+    'nis'      => $user['nis'] ?? '-',
+    'rayon'    => $user['rayon'] ?? '-',
+    'alamat'   => $user['alamat'] ?? '-'
 ];
 
-// REDIRECT ROLE
-switch($user['role']){
-    case 'admin':
-        header("Location: ../admin/dashboard.php");
-        break;
+/* =========================
+   LOG LOGIN
+========================= */
+simpan_log(
+    $conn,
+    $user['id'],
+    $user['nama'],
+    $user['role'],
+    "Login ke sistem"
+);
 
-    case 'petugas':
-        header("Location: ../petugas/dashboard.php");
-        break;
+/* =========================
+   REDIRECT BY ROLE
+========================= */
+$role = $user['role'];
 
-    case 'peminjam':
-        header("Location: ../siswa/dashboard.php");
-        break;
-
-    default:
-        echo "<script>
-            alert('Role tidak valid!');
-            window.location='../login.php';
-        </script>";
-        break;
+if ($role === 'admin') {
+    header("Location: ../admin/dashboard.php");
+    exit;
 }
+
+if ($role === 'petugas') {
+    header("Location: ../petugas/dashboard.php");
+    exit;
+}
+
+if ($role === 'peminjam') {
+    header("Location: ../siswa/dashboard.php");
+    exit;
+}
+
+/* =========================
+   ROLE INVALID
+========================= */
+session_destroy();
+header("Location: ../auth/login.php?error=invalid_role");
 exit;
-?>

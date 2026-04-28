@@ -1,26 +1,42 @@
 <?php
-include '../config/koneksi.php';
 
-/* VALIDASI ID */
-if(!isset($_GET['id'])){
+require_once '../config/koneksi.php';
+
+/* =========================
+   VALIDASI ID
+========================= */
+$id = $_GET['id'] ?? null;
+
+if (!$id) {
     die("ID tidak ditemukan!");
 }
 
-$id = $_GET['id'];
+/* =========================
+   AMBIL DATA
+========================= */
+$query = mysqli_query($conn, "
+    SELECT 
+        peminjaman.*,
+        users.username,
+        users.nis,
+        users.rayon,
+        users.alamat,
+        buku.judul
+    FROM peminjaman
+    JOIN users ON peminjaman.user_id = users.id
+    JOIN buku ON peminjaman.buku_id = buku.id
+    WHERE peminjaman.id='$id'
+    LIMIT 1
+");
 
-$data = mysqli_fetch_assoc(mysqli_query($conn,"
-SELECT 
-peminjaman.*,
-users.username,
-users.nis,
-users.rayon,
-users.alamat,
-buku.judul
-FROM peminjaman
-JOIN users ON peminjaman.user_id = users.id
-JOIN buku ON peminjaman.buku_id = buku.id
-WHERE peminjaman.id='$id'
-"));
+$data = mysqli_fetch_assoc($query);
+
+/* =========================
+   VALIDASI DATA
+========================= */
+if (!$data) {
+    die("Data tidak ditemukan!");
+}
 ?>
 
 <!DOCTYPE html>
@@ -34,9 +50,12 @@ body{
     margin:0;
     font-family:Segoe UI;
     background:#0f172a;
-    color:white;
+    color:#fff;
 }
 
+/* =========================
+   WRAPPER
+========================= */
 .wrapper{
     min-height:100vh;
     display:flex;
@@ -44,6 +63,9 @@ body{
     align-items:center;
 }
 
+/* =========================
+   CARD
+========================= */
 .card{
     width:380px;
     background:#1e293b;
@@ -57,6 +79,9 @@ h2{
     margin-bottom:15px;
 }
 
+/* =========================
+   INFO TEXT
+========================= */
 .info{
     text-align:left;
     font-size:13px;
@@ -65,9 +90,12 @@ h2{
 }
 
 .info b{
-    color:white;
+    color:#fff;
 }
 
+/* =========================
+   STATUS
+========================= */
 .status{
     display:inline-block;
     padding:5px 10px;
@@ -76,28 +104,34 @@ h2{
     margin-top:10px;
 }
 
-.menunggu{background:#facc15;color:black}
-.disetujui{background:#22c55e}
-.ditolak{background:#ef4444}
-.dipinjam{background:#38bdf8}
+.menunggu{background:#facc15;color:#000}
+.disetujui{background:#22c55e;color:#fff}
+.ditolak{background:#ef4444;color:#fff}
+.dipinjam{background:#38bdf8;color:#fff}
 
+/* =========================
+   QR
+========================= */
 .qr{
     margin-top:15px;
 }
 
 .qr img{
     width:140px;
-    background:white;
+    background:#fff;
     padding:6px;
     border-radius:10px;
 }
 
+/* =========================
+   BACK BUTTON
+========================= */
 .back{
     margin-top:15px;
     display:inline-block;
     padding:8px 12px;
     background:#334155;
-    color:white;
+    color:#fff;
     text-decoration:none;
     border-radius:8px;
     font-size:13px;
@@ -110,29 +144,29 @@ h2{
 
 <div class="wrapper">
 
-<div class="card">
+    <div class="card">
 
-<h2>📄 STRUK PEMINJAMAN</h2>
+        <h2>📄 STRUK PEMINJAMAN</h2>
 
-<p class="info"><b>Nama:</b> <?= $data['username']; ?></p>
-<p class="info"><b>NIS:</b> <?= $data['nis']; ?></p>
-<p class="info"><b>Rayon:</b> <?= $data['rayon']; ?></p>
-<p class="info"><b>Alamat:</b> <?= $data['alamat']; ?></p>
-<p class="info"><b>Buku:</b> <?= $data['judul']; ?></p>
-<p class="info"><b>Tanggal:</b> <?= $data['tanggal_pinjam']; ?></p>
+        <p class="info"><b>Nama:</b> <?= $data['username']; ?></p>
+        <p class="info"><b>NIS:</b> <?= $data['nis']; ?></p>
+        <p class="info"><b>Rayon:</b> <?= $data['rayon']; ?></p>
+        <p class="info"><b>Alamat:</b> <?= $data['alamat']; ?></p>
+        <p class="info"><b>Buku:</b> <?= $data['judul']; ?></p>
+        <p class="info"><b>Tanggal:</b> <?= $data['tanggal_pinjam']; ?></p>
 
-<span class="status <?= $data['status']; ?>">
-    <?= strtoupper($data['status']); ?>
-</span>
+        <span class="status <?= $data['status']; ?>">
+            <?= strtoupper($data['status']); ?>
+        </span>
 
-<!-- QR -->
-<div class="qr">
-    <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=<?= urlencode($data['id']); ?>">
-</div>
+        <!-- QR CODE -->
+        <div class="qr">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=<?= urlencode($data['id']); ?>">
+        </div>
 
-<a href="dashboard.php" class="back">← Kembali</a>
+        <a href="dashboard.php" class="back">← Kembali</a>
 
-</div>
+    </div>
 
 </div>
 

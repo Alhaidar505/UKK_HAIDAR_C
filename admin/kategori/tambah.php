@@ -1,73 +1,100 @@
 <?php
 include '../../config/koneksi.php';
 
-if(isset($_POST['simpan'])){
-    $nama = $_POST['nama'];
+/* =========================
+   PROSES SIMPAN KATEGORI
+========================= */
+if (isset($_POST['simpan'])) {
 
-    mysqli_query($conn, "INSERT INTO kategori VALUES(NULL,'$nama')");
+    $nama = trim($_POST['nama']);
 
-    header("Location: index.php");
+    if (!empty($nama)) {
+
+        $nama_safe = mysqli_real_escape_string($conn, $nama);
+
+        $query = mysqli_query($conn, "
+            INSERT INTO kategori (nama_kategori)
+            VALUES ('$nama_safe')
+        ");
+
+        if ($query) {
+            header("Location: index.php");
+            exit;
+        } else {
+            echo "<script>alert('Gagal menambahkan kategori');</script>";
+        }
+
+    } else {
+        echo "<script>alert('Nama kategori wajib diisi!');</script>";
+    }
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tambah Kategori</title>
 
 <style>
-body{
-    font-family: Arial;
-    background:#0f172a;
+*{
     margin:0;
-    color:white;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
 }
 
-.container{
+body{
+    background:linear-gradient(135deg,#0f172a,#020617);
+    color:white;
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
+    padding:20px;
 }
 
 /* CARD */
-.card{
-    background:#1e293b;
-    padding:30px;
-    border-radius:12px;
-    width:350px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.4);
+.container{
+    width:100%;
+    max-width:420px;
+    background:rgba(30,41,59,0.85);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:28px;
+    backdrop-filter:blur(10px);
 }
 
 /* TITLE */
-.card h2{
-    margin-bottom:20px;
+h2{
     text-align:center;
+    margin-bottom:18px;
 }
 
 /* INPUT */
 input{
     width:100%;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #334155;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    outline:none;
     background:#0f172a;
     color:white;
-    outline:none;
     margin-bottom:15px;
 }
 
-input:focus{
-    border-color:#38bdf8;
+input::placeholder{
+    color:#94a3b8;
 }
 
 /* BUTTON */
 button{
     width:100%;
-    padding:10px;
-    background:#38bdf8;
+    padding:12px;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
+    background:linear-gradient(135deg,#38bdf8,#0ea5e9);
     color:black;
     font-weight:bold;
     cursor:pointer;
@@ -75,15 +102,14 @@ button{
 }
 
 button:hover{
-    background:#0ea5e9;
-    transform:scale(1.02);
+    transform:scale(1.03);
 }
 
-/* BACK LINK */
+/* BACK */
 .back{
     display:block;
     text-align:center;
-    margin-top:10px;
+    margin-top:14px;
     color:#94a3b8;
     text-decoration:none;
     font-size:13px;
@@ -91,6 +117,22 @@ button:hover{
 
 .back:hover{
     color:white;
+}
+
+/* RESPONSIVE */
+@media(max-width:480px){
+    .container{
+        padding:20px;
+    }
+
+    h2{
+        font-size:18px;
+    }
+
+    input, button{
+        font-size:13px;
+        padding:11px;
+    }
 }
 </style>
 
@@ -100,18 +142,14 @@ button:hover{
 
 <div class="container">
 
-    <div class="card">
+    <h2>Tambah Kategori</h2>
 
-        <h2>Tambah Kategori</h2>
+    <form method="POST">
+        <input type="text" name="nama" placeholder="Nama kategori..." required>
+        <button type="submit" name="simpan">Simpan Kategori</button>
+    </form>
 
-        <form method="POST">
-            <input type="text" name="nama" placeholder="Nama kategori" required>
-            <button type="submit" name="simpan">Simpan</button>
-        </form>
-
-        <a href="index.php" class="back">← Kembali</a>
-
-    </div>
+    <a href="index.php" class="back">← Kembali</a>
 
 </div>
 

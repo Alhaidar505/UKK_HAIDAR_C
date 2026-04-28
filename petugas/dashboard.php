@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Petugas</title>
 
 <style>
@@ -14,10 +15,12 @@
 
 body{
     background:#0f172a;
-    color:white;
+    color:#fff;
 }
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 .header{
     position:sticky;
     top:0;
@@ -34,52 +37,76 @@ body{
     font-size:18px;
 }
 
-.logout{
+/* =========================
+   BUTTON
+========================= */
+.btn{
     padding:8px 14px;
-    background:#ef4444;
-    color:white;
-    text-decoration:none;
     border-radius:10px;
     font-size:13px;
+    text-decoration:none;
     transition:0.2s;
+    display:inline-block;
 }
 
-.logout:hover{
+.btn-danger{
+    background:#ef4444;
+    color:#fff;
+}
+
+.btn-danger:hover{
     background:#dc2626;
     transform:scale(1.05);
 }
 
-/* CONTAINER */
+/* =========================
+   CONTAINER
+========================= */
 .container{
     max-width:1100px;
     margin:auto;
     padding:25px;
 }
 
-/* GRID */
+/* =========================
+   GRID
+========================= */
 .grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
     gap:20px;
 }
 
-/* CARD */
+/* =========================
+   CARD
+========================= */
 .card{
     background:rgba(255,255,255,0.06);
     border:1px solid rgba(255,255,255,0.08);
-    padding:25px;
     border-radius:16px;
-    text-align:center;
     transition:0.25s;
-    backdrop-filter: blur(10px);
+    backdrop-filter:blur(10px);
 }
 
+/* LINK */
+.card-link{
+    display:block;
+    padding:25px;
+    text-decoration:none;
+    color:#fff;
+    text-align:center;
+}
+
+/* HOVER EFFECT */
 .card:hover{
     transform:translateY(-6px);
     background:rgba(255,255,255,0.12);
     box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
 
+/* =========================
+   CARD CONTENT
+========================= */
 .icon{
     font-size:40px;
     margin-bottom:10px;
@@ -96,13 +123,9 @@ body{
     color:#94a3b8;
 }
 
-/* LINK */
-a{
-    text-decoration:none;
-    color:white;
-}
-
-/* MOBILE */
+/* =========================
+   RESPONSIVE
+========================= */
 @media(max-width:600px){
     .header h2{
         font-size:16px;
@@ -119,36 +142,55 @@ a{
 <body>
 
 <!-- HEADER -->
-<div class="header">
+<header class="header">
     <h2>📌 Dashboard Petugas</h2>
-    <a href="../auth/logout.php" class="logout">Logout</a>
-</div>
+    <a href="../auth/logout.php" class="btn btn-danger">Logout</a>
+</header>
 
-<div class="container">
+<!-- CONTENT -->
+<main class="container">
 
-    <div class="grid">
+    <section class="grid">
 
         <!-- PENGAJUAN -->
-        <a href="pengajuan.php">
-            <div class="card">
+        <div class="card">
+            <a href="pengajuan/pengajuan.php" class="card-link">
                 <div class="icon">📥</div>
                 <div class="title">Pengajuan Peminjaman</div>
                 <div class="desc">Verifikasi permintaan siswa</div>
-            </div>
-        </a>
+            </a>
+        </div>
+
+        <!-- PENGEMBALIAN -->
+        <div class="card">
+            <a href="pengembalian/index.php" class="card-link">
+                <div class="icon">📤</div>
+                <div class="title">Pengembalian Siswa</div>
+                <div class="desc">Validasi pengembalian buku</div>
+            </a>
+        </div>
+
+        <!-- PEMBAYARAN -->
+        <div class="card">
+            <a href="pembayaran/index.php" class="card-link">
+                <div class="icon">💳</div>
+                <div class="title">Pembayaran Siswa</div>
+                <div class="desc">Struk & histori pembayaran</div>
+            </a>
+        </div>
 
         <!-- RIWAYAT -->
-        <a href="riwayat.php">
-            <div class="card">
+        <div class="card">
+            <a href="riwayat.php" class="card-link">
                 <div class="icon">📄</div>
                 <div class="title">Riwayat Peminjaman</div>
-                <div class="desc">Struk & histori peminjaman</div>
-            </div>
-        </a>
+                <div class="desc">Data histori peminjaman</div>
+            </a>
+        </div>
 
-    </div>
+    </section>
 
-</div>
+</main>
 
 </body>
 </html>

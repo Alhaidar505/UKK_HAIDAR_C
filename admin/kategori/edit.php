@@ -15,86 +15,147 @@ if(isset($_POST['update'])){
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Edit Kategori</title>
 
 <style>
-body{
-    font-family: Arial;
-    background:#0f172a;
+*{
     margin:0;
-    color:white;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
 }
 
-.container{
+body{
+    background:linear-gradient(135deg,#0f172a,#020617);
+    color:white;
+    min-height:100vh;
     display:flex;
-    justify-content:center;
     align-items:center;
-    height:100vh;
+    justify-content:center;
+    padding:20px;
 }
 
 /* CARD */
-.card{
-    background:#1e293b;
-    padding:30px;
-    border-radius:12px;
-    width:350px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.4);
+.container{
+    width:100%;
+    max-width:420px;
+    background:rgba(30,41,59,0.85);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;
+    padding:28px;
+    box-shadow:0 15px 40px rgba(0,0,0,0.4);
+    backdrop-filter:blur(10px);
+    transition:0.3s;
+}
+
+.container:hover{
+    transform:translateY(-3px);
 }
 
 /* TITLE */
-.card h2{
+h2{
     text-align:center;
-    margin-bottom:20px;
+    margin-bottom:18px;
+    font-size:20px;
 }
 
 /* INPUT */
 input{
     width:100%;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #334155;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    outline:none;
     background:#0f172a;
     color:white;
-    outline:none;
+    font-size:14px;
     margin-bottom:15px;
+    transition:0.2s;
 }
 
 input:focus{
-    border-color:#38bdf8;
+    background:#111827;
+    transform:scale(1.02);
 }
 
 /* BUTTON */
 button{
     width:100%;
-    padding:10px;
-    background:#f59e0b;
+    padding:12px;
     border:none;
-    border-radius:8px;
+    border-radius:10px;
+    background:linear-gradient(135deg,#f59e0b,#f97316);
     color:black;
     font-weight:bold;
     cursor:pointer;
     transition:0.3s;
+    font-size:14px;
 }
 
 button:hover{
-    background:#d97706;
-    transform:scale(1.02);
+    transform:scale(1.04);
+    box-shadow:0 10px 20px rgba(245,158,11,0.3);
 }
 
 /* BACK */
 .back{
     display:block;
     text-align:center;
-    margin-top:10px;
+    margin-top:14px;
     color:#94a3b8;
-    text-decoration:none;
     font-size:13px;
+    text-decoration:none;
 }
 
 .back:hover{
     color:white;
+}
+
+/* ======================
+   TABLET
+====================== */
+@media(max-width:768px){
+    .container{
+        max-width:90%;
+        padding:24px;
+    }
+}
+
+/* ======================
+   HP / IPAD MINI
+====================== */
+@media(max-width:480px){
+    .container{
+        padding:20px;
+        border-radius:14px;
+    }
+
+    h2{
+        font-size:18px;
+    }
+
+    input{
+        font-size:13px;
+        padding:11px;
+    }
+
+    button{
+        font-size:13px;
+        padding:11px;
+    }
+}
+
+/* ======================
+   HP KECIL
+====================== */
+@media(max-width:360px){
+    h2{
+        font-size:16px;
+    }
 }
 </style>
 
@@ -104,18 +165,14 @@ button:hover{
 
 <div class="container">
 
-    <div class="card">
+    <h2>✏ Edit Kategori</h2>
 
-        <h2>Edit Kategori</h2>
+    <form method="POST">
+        <input type="text" name="nama" value="<?= $data['nama_kategori'] ?>" required>
+        <button type="submit" name="update">Update Kategori</button>
+    </form>
 
-        <form method="POST">
-            <input type="text" name="nama" value="<?= $data['nama_kategori'] ?>" required>
-            <button type="submit" name="update">Update</button>
-        </form>
-
-        <a href="index.php" class="back">← Kembali</a>
-
-    </div>
+    <a href="index.php" class="back">← Kembali</a>
 
 </div>
 

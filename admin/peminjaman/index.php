@@ -1,95 +1,95 @@
 <?php
 include '../../config/koneksi.php';
 
-/* AMBIL DATA (URUT A-Z) */
-$data = mysqli_query($conn,"
-SELECT 
-peminjaman.*,
-users.username,
-buku.judul,
-buku.harga
-FROM peminjaman
-JOIN users ON peminjaman.user_id = users.id
-JOIN buku ON peminjaman.buku_id = buku.id
-ORDER BY users.username ASC
-");
-
-/* FORMAT RUPIAH */
+/* =========================
+   HELPER RUPIAH
+========================= */
 function rupiah($angka){
-    return "Rp " . number_format($angka,0,',','.');
+    return "Rp " . number_format((int)$angka, 0, ',', '.');
 }
 
-/* HITUNG DENDA */
-function denda($status,$tgl_kembali,$harga){
-    $now = date('Y-m-d');
+/* =========================
+   HITUNG DENDA
+   (PINJAM vs KEMBALI RENCANA)
+   1000 / hari, batas 7 hari
+========================= */
+function hitung_denda($tgl_pinjam, $tgl_kembali){
+    $batas = 7;
+    $tarif = 1000;
     $total = 0;
 
-    // telat
-    if($status == 'dipinjam' && $tgl_kembali){
-        if($now > $tgl_kembali){
-            $hari = (strtotime($now) - strtotime($tgl_kembali))/86400;
-            $total = $hari * 10000;
+    if(!empty($tgl_pinjam) && !empty($tgl_kembali)){
+        $pinjam  = new DateTime($tgl_pinjam);
+        $kembali = new DateTime($tgl_kembali);
+
+        $selisih = $pinjam->diff($kembali)->days;
+
+        if($selisih > $batas){
+            $total = ($selisih - $batas) * $tarif;
         }
-    }
-
-    // rusak
-    if($status == 'rusak'){
-        $total = $harga * 0.5;
-    }
-
-    // hilang
-    if($status == 'hilang'){
-        $total = $harga;
     }
 
     return $total;
 }
+
+/* =========================
+   AMBIL DATA PEMINJAMAN
+========================= */
+$query = mysqli_query($conn, "
+SELECT 
+    peminjaman.*,
+    users.username,
+    buku.judul
+FROM peminjaman
+JOIN users ON peminjaman.user_id = users.id
+JOIN buku ON peminjaman.buku_id = buku.id
+ORDER BY peminjaman.id DESC
+");
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-<title>Peminjaman</title>
+<meta charset="UTF-8">
+<title>Data Peminjaman</title>
 
 <style>
 body{
-    margin:0;
-    font-family:Segoe UI;
     background:#0f172a;
     color:white;
+    font-family:'Segoe UI',sans-serif;
 }
 
 .container{
-    padding:30px;
+    max-width:1200px;
+    margin:auto;
+    padding:25px;
 }
 
-/* HEADER */
 .header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:15px;
+    margin-bottom:20px;
 }
 
-/* BUTTON */
 .back{
     padding:8px 12px;
     background:#1e293b;
     border:1px solid #334155;
     color:white;
     text-decoration:none;
-    border-radius:8px;
+    border-radius:10px;
     font-size:13px;
 }
 
-.back:hover{
-    background:#334155;
-}
-
 /* TABLE */
+.table-wrapper{overflow-x:auto;}
+
 table{
     width:100%;
     border-collapse:collapse;
+    min-width:900px;
     background:#1e293b;
     border-radius:12px;
     overflow:hidden;
@@ -97,79 +97,128 @@ table{
 
 th,td{
     padding:12px;
-    border-bottom:1px solid #334155;
     font-size:13px;
+    border-bottom:1px solid #334155;
 }
 
 th{
     background:#0b1220;
     color:#94a3b8;
+    text-align:left;
 }
 
 /* STATUS */
 .status{
     padding:5px 10px;
-    border-radius:20px;
+    border-radius:999px;
     font-size:12px;
+    font-weight:600;
 }
 
-.dipinjam{background:#facc15;color:black}
-.kembali{background:#22c55e}
-.menunggu{background:#38bdf8}
-.rusak{background:#f97316}
-.hilang{background:#ef4444}
+.dipinjam{background:rgba(250,204,21,0.15);color:#facc15}
+.kembali{background:rgba(34,197,94,0.15);color:#22c55e}
+.menunggu{background:rgba(56,189,248,0.15);color:#38bdf8}
 
 /* DENDA */
 .badge{
-    color:#facc15;
+    background:#ef4444;
+    color:white;
+    padding:4px 10px;
+    border-radius:999px;
     font-weight:bold;
 }
-</style>
 
+/* MOBILE */
+@media(max-width:600px){
+    table,thead,tbody,tr,td{
+        display:block;
+        width:100%;
+    }
+
+    thead{display:none;}
+
+    tr{
+        background:#1e293b;
+        margin-bottom:15px;
+        border-radius:12px;
+        padding:12px;
+    }
+
+    td{
+        display:flex;
+        justify-content:space-between;
+        padding:8px 0;
+        border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+
+    td:last-child{border:none;}
+
+    td::before{
+        content:attr(data-label);
+        color:#94a3b8;
+        font-weight:600;
+    }
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-<!-- HEADER -->
 <div class="header">
-    <h2>📚 Data Peminjaman Buku</h2>
+    <h2>📚 Data Peminjaman</h2>
     <a href="../dashboard.php" class="back">← Kembali</a>
 </div>
+
+<div class="table-wrapper">
 
 <table>
 
 <tr>
-<th>User</th>
-<th>Buku</th>
-<th>Status</th>
-<th>Tgl Pinjam</th>
-<th>Tgl Kembali</th>
-<th>Denda / Ganti Rugi</th>
+    <th>User</th>
+    <th>Buku</th>
+    <th>Status</th>
+    <th>Pinjam</th>
+    <th>Kembali Rencana</th>
+    <th>Denda</th>
 </tr>
 
-<?php while($d = mysqli_fetch_assoc($data)) { 
-$biaya = denda($d['status'],$d['tanggal_kembali'],$d['harga']);
+<?php while($d = mysqli_fetch_assoc($query)) { 
+
+    $tgl_kembali = $d['tanggal_kembali_rencana'] ?? null;
+
+    $denda = hitung_denda(
+        $d['tanggal_pinjam'],
+        $tgl_kembali
+    );
 ?>
 
 <tr>
-<td><?= $d['username'] ?></td>
-<td><?= $d['judul'] ?></td>
 
-<td>
-<span class="status <?= $d['status'] ?>">
-<?= $d['status'] ?>
-</span>
+<td data-label="User"><?= $d['username'] ?></td>
+<td data-label="Buku"><?= $d['judul'] ?></td>
+
+<td data-label="Status">
+    <span class="status <?= $d['status'] ?>">
+        <?= $d['status'] ?>
+    </span>
 </td>
 
-<td><?= $d['tanggal_pinjam'] ?></td>
-<td><?= $d['tanggal_kembali'] ?? '-' ?></td>
+<td data-label="Pinjam"><?= $d['tanggal_pinjam'] ?></td>
 
-<td>
-<?php if($biaya > 0){ ?>
-    <span class="badge"><?= rupiah($biaya) ?></span>
-<?php } else { echo "-"; } ?>
+<td data-label="Kembali">
+    <?= $tgl_kembali ? $tgl_kembali : '-' ?>
+</td>
+
+<td data-label="Denda">
+    <?php if($denda > 0){ ?>
+        <span class="badge">
+            <?= rupiah($denda) ?>
+        </span>
+    <?php } else { ?>
+        -
+    <?php } ?>
 </td>
 
 </tr>
@@ -177,6 +226,8 @@ $biaya = denda($d['status'],$d['tanggal_kembali'],$d['harga']);
 <?php } ?>
 
 </table>
+
+</div>
 
 </div>
 
